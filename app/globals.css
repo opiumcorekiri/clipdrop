@@ -382,8 +382,9 @@ h1 span {
 
 .preview {
   position: relative;
+  min-height: 300px;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
+  border-radius: 12px;
   background: #09090b;
 }
 
@@ -391,8 +392,7 @@ h1 span {
   width: 100%;
   height: 100%;
   min-height: 300px;
-  aspect-ratio: 16 / 9;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
   background: #09090b;
 }

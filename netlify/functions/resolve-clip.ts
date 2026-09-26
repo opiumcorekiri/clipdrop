@@ -100,17 +100,7 @@ async function gql(body: unknown) {
     throw new Error(`Twitch returned HTTP ${response.status}.`);
   }
 
-  const data = await response.json();
-
-  if (Array.isArray(data?.errors) && data.errors.length > 0) {
-    throw new Error(
-      data.errors
-        .map((error: { message?: string }) => error.message ?? "GraphQL error")
-        .join("; ")
-    );
-  }
-
-  return data;
+  return response.json();
 }
 
 async function getClipMetadata(slug: string): Promise<GqlClip | null> {
@@ -131,18 +121,14 @@ async function getClipMetadata(slug: string): Promise<GqlClip | null> {
           login
         }
         thumbnailURL(width: 1280, height: 720)
+        videoQualities {
+          quality
+          frameRate
+          sourceURL
+        }
       }
     }
   `;
-
-  const response = await gql({
-    operationName: "ClipMetadata",
-    query,
-    variables: { slug }
-  });
-
-  return response?.data?.clip ?? null;
-}
 
   const response = await gql({
     query,
@@ -210,42 +196,17 @@ export default async (request: Request) => {
     const slug = parseClipSlug(body.url);
 
     const [metadata, access] = await Promise.all([
-  getClipMetadata(slug),
-  getAccessData(slug)
-]);
+      getClipMetadata(slug),
+      getAccessData(slug)
+    ]);
 
-if (!metadata || !access) {
-  return Response.json(
-    {
-      error:
-        "Twitch returned playback data, but complete Clip metadata was unavailable."
-    },
-    { status: 502 }
-  );
-}
+    if (!metadata && !access) {
+      return Response.json(
+        { error: "Clip not found, unavailable, or Twitch did not return playback data." },
+        { status: 404 }
+      );
+    }
 
-const broadcaster =
-  metadata.broadcaster?.displayName ??
-  metadata.broadcaster?.login;
-
-const creator =
-  metadata.curator?.displayName ??
-  metadata.curator?.login;
-
-if (
-  !broadcaster ||
-  !creator ||
-  metadata.durationSeconds == null ||
-  metadata.viewCount == null
-) {
-  return Response.json(
-    {
-      error:
-        "Twitch returned incomplete Clip metadata. Please try again."
-    },
-    { status: 502 }
-  );
-}
     const sourceQualities =
       metadata?.videoQualities?.length
         ? metadata.videoQualities
@@ -297,10 +258,17 @@ if (
     return Response.json({
       id: metadata?.id ?? access?.id ?? slug,
       title: metadata?.title ?? slug,
-      broadcaster,
-      creator,
-      duration: metadata.durationSeconds,
-      views: metadata.viewCount,
+      broadcaster:
+        metadata?.broadcaster?.displayName ??
+        metadata?.broadcaster?.login ??
+        "Unknown streamer",
+      creator:
+        metadata?.curator?.displayName ??
+        metadata?.curator?.login ??
+        "Unknown creator",
+      duration: Number(metadata?.durationSeconds ?? 0),
+      views: Number(metadata?.viewCount ?? 0),
+      createdAt: metadata?.createdAt ?? null,
       thumbnail: metadata?.thumbnailURL ?? "",
       qualities: unique
     });
