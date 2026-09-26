@@ -210,17 +210,42 @@ export default async (request: Request) => {
     const slug = parseClipSlug(body.url);
 
     const [metadata, access] = await Promise.all([
-      getClipMetadata(slug),
-      getAccessData(slug)
-    ]);
+  getClipMetadata(slug),
+  getAccessData(slug)
+]);
 
-    if (!metadata && !access) {
-      return Response.json(
-        { error: "Clip not found, unavailable, or Twitch did not return playback data." },
-        { status: 404 }
-      );
-    }
+if (!metadata || !access) {
+  return Response.json(
+    {
+      error:
+        "Twitch returned playback data, but complete Clip metadata was unavailable."
+    },
+    { status: 502 }
+  );
+}
 
+const broadcaster =
+  metadata.broadcaster?.displayName ??
+  metadata.broadcaster?.login;
+
+const creator =
+  metadata.curator?.displayName ??
+  metadata.curator?.login;
+
+if (
+  !broadcaster ||
+  !creator ||
+  metadata.durationSeconds == null ||
+  metadata.viewCount == null
+) {
+  return Response.json(
+    {
+      error:
+        "Twitch returned incomplete Clip metadata. Please try again."
+    },
+    { status: 502 }
+  );
+}
     const sourceQualities =
       metadata?.videoQualities?.length
         ? metadata.videoQualities
