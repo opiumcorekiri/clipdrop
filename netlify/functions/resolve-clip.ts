@@ -131,14 +131,18 @@ async function getClipMetadata(slug: string): Promise<GqlClip | null> {
           login
         }
         thumbnailURL(width: 1280, height: 720)
-        videoQualities {
-          quality
-          frameRate
-          sourceURL
-        }
       }
     }
   `;
+
+  const response = await gql({
+    operationName: "ClipMetadata",
+    query,
+    variables: { slug }
+  });
+
+  return response?.data?.clip ?? null;
+}
 
   const response = await gql({
     query,
