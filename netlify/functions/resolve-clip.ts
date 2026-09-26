@@ -215,7 +215,10 @@ export default async (request: Request) => {
     const signature = access?.playbackAccessToken?.signature;
     const token = access?.playbackAccessToken?.value;
 
-    const qualities: Quality[] = sourceQualities
+    const typedSourceQualities: NonNullable<GqlClip["videoQualities"]> =
+      sourceQualities;
+
+    const qualities: Quality[] = typedSourceQualities
       .filter(q => q.sourceURL && q.quality)
       .map(q => {
         const rawQuality = String(q.quality);
