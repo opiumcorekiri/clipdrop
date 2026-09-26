@@ -244,12 +244,19 @@ export default function Home() {
 
           <div className="clipCard">
             <div className="preview">
-              <img src={clip.thumbnail} alt="" />
-              <div className="previewOverlay">
-                <div className="playCircle">▶</div>
-                <span>{formatDuration(clip.duration)}</span>
-              </div>
-            </div>
+  												<video
+   												 key={selected?.url}
+ 												   src={selected?.url}
+												    poster={clip.thumbnail || undefined}
+  												  controls
+												    playsInline
+												    preload="metadata"
+												  />
+
+  											<div className="previewOverlay">
+												    <span>{formatDuration(clip.duration)}</span>
+ 											 </div>
+											</div>
 
             <div className="clipInfo">
               <div className="creatorRow">
