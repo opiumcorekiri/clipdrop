@@ -297,17 +297,10 @@ if (
     return Response.json({
       id: metadata?.id ?? access?.id ?? slug,
       title: metadata?.title ?? slug,
-      broadcaster:
-        metadata?.broadcaster?.displayName ??
-        metadata?.broadcaster?.login ??
-        "Unknown streamer",
-      creator:
-        metadata?.curator?.displayName ??
-        metadata?.curator?.login ??
-        "Unknown creator",
-      duration: Number(metadata?.durationSeconds ?? 0),
-      views: Number(metadata?.viewCount ?? 0),
-      createdAt: metadata?.createdAt ?? null,
+      broadcaster,
+      creator,
+      duration: metadata.durationSeconds,
+      views: metadata.viewCount,
       thumbnail: metadata?.thumbnailURL ?? "",
       qualities: unique
     });
