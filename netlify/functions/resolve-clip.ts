@@ -100,7 +100,17 @@ async function gql(body: unknown) {
     throw new Error(`Twitch returned HTTP ${response.status}.`);
   }
 
-  return response.json();
+  const data = await response.json();
+
+  if (Array.isArray(data?.errors) && data.errors.length > 0) {
+    throw new Error(
+      data.errors
+        .map((error: { message?: string }) => error.message ?? "GraphQL error")
+        .join("; ")
+    );
+  }
+
+  return data;
 }
 
 async function getClipMetadata(slug: string): Promise<GqlClip | null> {
